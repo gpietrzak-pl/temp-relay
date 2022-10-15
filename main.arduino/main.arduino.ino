@@ -24,7 +24,7 @@ const int  relayPin =  7; // the number of the relay pin
 int buttonState = 0;         // variable for reading the pushbutton status
 int temperatura = 0;
 int wilgotnosc = 0;
-int zadanaTemperatura = 30;
+int zadanaTemperatura = 20;
 
 // You can set the individual segments per digit to spell words or create other symbols:
 const uint8_t done[] = {
@@ -40,6 +40,16 @@ const uint8_t celsius[] = {
   SEG_A | SEG_D | SEG_E | SEG_F   // C
 };
 
+void SetRelay(int temperature, int setTemperature)
+{
+  if (temperature > setTemperature) {
+   digitalWrite(relayPin, HIGH); 
+  }
+  else
+  {
+    digitalWrite(relayPin, LOW);
+  }
+}
 
 void setup()
 {
@@ -50,9 +60,6 @@ void setup()
   // initialize an input pins:
   pinMode(buttonPin, INPUT);  
   
-  // initialize serial transmision
-  Serial.begin(9600);
-
   // initial config
   dht.setup(DHT11_PIN);
   display.clear();
@@ -61,8 +68,6 @@ void setup()
  
 void loop()
 {
-
-
  // read the state of the pushbutton value:
   buttonState = !digitalRead(buttonPin);
 
@@ -70,34 +75,22 @@ void loop()
   if (buttonState == HIGH) {
     // turn LED on:
     digitalWrite(ledPin, HIGH);
+    if(zadanaTemperatura <= 50){
+        zadanaTemperatura = zadanaTemperatura + 5;
+    display.showNumberDec(zadanaTemperatura, false, 2, 0);
+    }
+    else{
+      zadanaTemperatura = 20;
+      display.showNumberDec(zadanaTemperatura, false, 2, 0);
+    }
+    delay(1000);
   } else {
     // turn LED off:
     digitalWrite(ledPin, LOW);
   }
-
-
   
-  //Pobranie informacji o wilgotnosci
-  wilgotnosc = dht.getHumidity();
-  //Pobranie informacji o temperaturze
-  temperatura = dht.getTemperature();
+  SetRelay(dht.getTemperature(),zadanaTemperatura);
   
-
-  if (temperatura > zadanaTemperatura) {
-   digitalWrite(relayPin, HIGH); 
-  }
-  else
-  {
-    digitalWrite(relayPin, LOW);
-  }
-  
-  //Serial.print(wilgotnosc);
-  //Serial.print("%RH | ");
-  //Serial.print(temperatura);
-  //Serial.println("*C");
-  
-  display.showNumberDec(temperatura, false, 2, 0);
+  display.showNumberDec(dht.getTemperature(), false, 2, 0);
   display.setSegments(celsius, 2, 2);
-
-  //delay(1000);
 }
